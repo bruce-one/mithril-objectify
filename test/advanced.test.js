@@ -303,6 +303,12 @@ describe("mithril-objectify", function() {
                 code('m("div", JSON.stringify(unknown))'),
                 '({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":JSON.stringify(unknown),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
+        })
+        it("should know that JSON.stringify is safe with identifiers (nested)", function() {
+            assert.equal(
+                code('m("pre", m("code", JSON.stringify(unknown)))'),
+                '({"tag":"pre","key":undefined,"attrs":undefined,"children":[{"tag":"code","key":undefined,"attrs":undefined,"children":undefined,"text":JSON.stringify(unknown),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
         });
 
         it("should know that JSON.stringify is safe with identifiers, but fail gracefully with unknown identifiers", function() {
