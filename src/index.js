@@ -6,7 +6,7 @@ const t = require('babel-core').types
 const parse = require('babylon').parse
 const generate = require('babel-generator').default
 const debug = require('debug')('mopt')
-const { isM, isMithrilTrust } = require('./valid')
+const { isM, isMithrilTrust, isJsonStringify } = require('./valid')
 
 const m = require('mithril/render/hyperscript')
 m.trust = require('mithril/render/trust')
@@ -24,16 +24,66 @@ function shouldProcess(node) {
     return isM(node) || isMithrilTrust(node)
 }
 
+let jsonMatches = []
+const COMPLEX_FUNCS = [
+    function jsonStringify(path) {
+        const node = JSON.parse(JSON.stringify(path.node))
+        path.traverse(jsonVisitor)
+        console.log( generate(path.node).code )
+        if(jsonMatches.length !== 0) {
+            try {
+                const processed = JSON.stringify(process(generate(path.node).code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
+                const replaced = jsonMatches.reduce( (str, { key, original }) => str.replace(key, original), processed)
+                path.replaceWithSourceString(`(${replaced})`)
+            } catch(e) {
+                path.stop()
+                path.replaceWith(node)
+            }
+        }
+    }
+]
+function tryToHandleComplex(path) {
+    let result = null
+    COMPLEX_FUNCS.find( (func) => {
+        try {
+            const funcRes = func(path)
+            if(funcRes) {
+                result = funcRes
+                return true
+            }
+        } catch(e) {
+            debug('Complex node exception %s', e.stack)
+        }
+    })
+    return result
+}
+
+let i = 0
+const jsonVisitor = {
+    CallExpression: function(path) {
+        if(isJsonStringify(path.node)) {
+            const key = `"__DODGY_MOPT_REPLACE_JSON_${i++}__"`
+            jsonMatches = jsonMatches .concat({ key, original: generate(path.node).code })
+            path.replaceWithSourceString(key)
+        }
+        return
+    }
+}
+
 const visitor = {
     CallExpression: function(path) {
         if(shouldProcess(path.node)) {
             const { code } = generate(path.node)
             try {
                 const replaced = JSON.stringify(process(code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
-                console.log(replaced)
                 path.replaceWithSourceString(`(${replaced})`)
             } catch(e) {
-                debug('Failed to process node %j because of error %s', e.stack)
+                const result = tryToHandleComplex(path)
+                if(result) {
+                    path.replaceWithSourceString(`(${result})`)
+                } else {
+                    debug('Failed to process node %j because of error %s', e.stack)
+                }
             }
         }
         return
