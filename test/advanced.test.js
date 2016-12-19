@@ -163,10 +163,10 @@ describe("mithril-objectify", function() {
             );
         });
         
-        it.skip("should not convert more than 2 values", function() {
-            assert.equal(
-                code('m("input" + ".pure-u" + ".pure-u-1-2")'),
-                'm("input"+".pure-u"+".pure-u-1-2");'
+        it("should convert more than 2 values", function() {
+            assert.deepEqual(
+                run('m("input" + ".pure-u" + ".pure-u-1-2")'),
+                parse('({"tag":"input","key":undefined,"attrs":{"className":"pure-u pure-u-1-2"},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
             );
         });
         
@@ -187,9 +187,9 @@ describe("mithril-objectify", function() {
         });
         
         it.skip("should support expressions", function() {
-            assert.equal(
-                code('m("div", "fooga" + "wooga")'),
-                '({tag:"div",attrs:undefined,children:["fooga"+"wooga"],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+            assert.deepEqual(
+                run('m("div", "fooga" + "wooga")'),
+                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"foogawooga"});')
             );
         });
         
@@ -208,51 +208,83 @@ describe("mithril-objectify", function() {
 
     describe("Array.prototype comprehension", function() {
         it("should unwrap Array.prototype children that return an array", function() {
-            assert.deepEqual(
+            assert.equal(
                 code('m("div", [ 1, 2 ].map(function(val) { return val; }))'),
-                '({tag:"div",attrs:undefined,children:[1,2].map(function(val){return val;}),dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":1,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
 
             assert.deepEqual(
                 code('m("div", [ 1, 2 ].filter(function(val) { return val === 1; }))'),
-                '({tag:"div",attrs:undefined,children:[1,2].filter(function(val){return val===1;}),dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":1,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+
+            assert.deepEqual(
+                code('m("div", [ 1, 2 ].filter(function(val) { return val === x; }))'),
+                'm("div",[1,2].filter(function(val){return val===x;}));'
             );
 
             assert.deepEqual(
                 code('m("div", [ 1, 2 ].sort())'),
-                '({tag:"div",attrs:undefined,children:[1,2].sort(),dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":1,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.deepEqual(
+                code('m("div", [ 1, x ].sort())'),
+                'm("div",[1,x].sort());'
             );
         });
         
         it("should support Array.prototype comprehensions when there are multiple children", function() {
             assert.deepEqual(
                 code('m("div", [ 1, 2 ], [ 3, 4 ].map(function(val) { return val; }))'),
-                '({tag:"div",attrs:undefined,children:[{tag:"[",attrs:undefined,children:[{tag:"#",attrs:undefined,children:1,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined},{tag:"#",attrs:undefined,children:2,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined}],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined},{tag:"[",attrs:undefined,children:[3,4].map(function(val){return val;}),dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined}],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":[{"tag":"[","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":1,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"[","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":3,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":4,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.deepEqual(
+                code('m("div", [ x, 2 ], [ 3, 4 ].map(function(val) { return val; }))'),
+                'm("div",[x,2],[3,4].map(function(val){return val;}));'
             );
         });
         
         it("should handle Array.prototype methods that return a string", function() {
             assert.deepEqual(
                 run('m("div", [ 1, 2 ].join(""))'),
-                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"12",skip:false,instance:undefined});')
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":"12","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+            assert.deepEqual(
+                code('m("div", [ 1, x ].join(""))'),
+                'm("div",[1,x].join(""));'
             );
             
             // Yes this looks insane, but it's still valid
-            assert.equal(
+            assert.deepEqual(
                 run('m("div", [ 1, 2 ]["join"](""))'),
-                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"12",skip:false,instance:undefined});')
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":"12","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+
+            assert.equal(
+                code('m("div", [x,2]["join"](""))'),
+                'm("div",[x,2]["join"](""));'
             );
         });
         
-        it.skip("shouldn't unwrap Array.prototype children when they don't return an array", function() {
+        it("shouldn't unwrap Array.prototype children when they don't return an array", function() {
+            assert.deepEqual(
+                run('m("div", [ 1, 2 ].forEach(function(val) { return val === 1 }))'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+
             assert.equal(
-                code('m("div", [ 1, 2 ].forEach(function(val) { return val === 1 }))'),
-                'm("div",[1,2].forEach(function(val){return val===1;}));'
+                code('m("div", [ x, 2 ].forEach(function(val) { return val === 1 }))'),
+                'm("div",[x,2].forEach(function(val){return val===1;}));'
             );
             
+            assert.deepEqual(
+                run('m("div", [ 1, 2 ].some(function(val) { return val === 1 }))'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":true,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+
             assert.equal(
-                code('m("div", [ 1, 2 ].some(function(val) { return val === 1 }))'),
-                'm("div",[1,2].some(function(val){return val===1;}));'
+                code('m("div", [ x, 2 ].some(function(val) { return val === 1 }))'),
+                'm("div",[x,2].some(function(val){return val===1;}));'
             );
         });
         
@@ -272,15 +304,11 @@ describe("mithril-objectify", function() {
     });
 
     describe("Conditional expression children", function() {
-        it("should convert when all entries are literals", function() {
-            assert.equal(
-                code('m("div", foo ? "bar" : "baz")'),
-                'm("div",foo?"bar":"baz");'
+        it.skip("should convert when all entries are literals", function() {
+            assert.deepEqual(
+                run('m("div", foo ? "bar" : "baz")'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":foo?"bar":"baz","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
             );
-            //assert.deepEqual(
-            //    run('m("div", foo ? "bar" : "baz")'),
-            //    parse('({tag:"div",attrs:undefined,children:[foo?"bar":"baz"],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined,instance:undefined,skip:false);')
-            //);
         });
         
         it("should not convert when entries are not literals", function() {
@@ -290,7 +318,7 @@ describe("mithril-objectify", function() {
                 'm("div",foo?bar:"baz");'
             );
             
-            assert.equal(
+            assert.equal( // TODO this could probably not it's an object? (`attrs:foo?{class:options.class}:null`)
                 code('m("div", foo ? { class : options.class } : null)'),
                 'm("div",foo?{class:options.class}:null);'
             );

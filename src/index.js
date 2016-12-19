@@ -28,6 +28,8 @@ function shouldProcess(node) {
 let replacementId = 0
 let matches = []
 const INTERNAL_ATTRS_KEY = '__DODGY_MOPT_REPLACE_ATTRS_KEY__'
+
+// TODO could handle ternaries for literals (eg `m('div', x ? 'str1' : 'str2')`
 const COMPLEX_RULES = [
     {
         visitor: {
