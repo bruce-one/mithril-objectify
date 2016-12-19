@@ -4,7 +4,7 @@
   "description": "Babel plugin to optimize Mithril m() calls into simple JS objects",
   "main": "./src/index.js",
   "scripts": {
-    "test": "npm run lint && npm run mocha",
+    "test": "npm run mocha",
     "lint": "eslint .",
     "cover": "istanbul test --print both ./node_modules/mocha/bin/_mocha",
     "mocha": "mocha",
