@@ -69,6 +69,18 @@ describe("mithril-objectify", function() {
         );
     });
 
+    it("Non-string attr values with inline syntax (identifiers)", function() { // TODO this isn't very exhaustive...
+        assert.equal(
+            code('m("div[a=b]", { fooga : unknown })'),
+            '({"tag":"div","key":undefined,"attrs":{fooga:unknown,"a":"b"},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+
+        assert.equal(
+            code('m("div[a=b][c=d]", { fooga : unknown })'),
+            '({"tag":"div","key":undefined,"attrs":{fooga:unknown,"a":"b","c":"d"},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+    });
+
     it("Quoted properties (issue #6)", function() {
         /* eslint quote-props:0 */
         assert.deepEqual(
@@ -87,17 +99,18 @@ describe("mithril-objectify", function() {
             run('m("div", m("div", m("div")), m("div"))'),
             m("div", m("div", m("div")), m("div"))
         );
-        it("nested with identifiers", function() {
-            assert.equal(
-                code('m("tr", m("th", "Name"), m("td", obj.name))'),
-                'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":"Name","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
-            );
+    });
 
-            assert.equal(
-                code('m("tr", m("th", JSON.stringify(unknown)), m("td", obj.name))'),
-                'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":JSON.stringify(unknown),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
-            );
-        });
+    it("nested m() with identifiers", function() {
+        assert.equal(
+            code('m("tr", m("th", "Name"), m("td", obj.name))'),
+            'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":"Name","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
+        );
+
+        assert.equal(
+            code('m("tr", m("th", JSON.stringify(unknown)), m("td", obj.name))'),
+            'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":JSON.stringify(unknown),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
+        );
     });
 
     

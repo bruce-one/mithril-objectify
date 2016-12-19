@@ -35,6 +35,8 @@ const INTERNAL_LITERALS = { // babel/babylon has more literals than this...
     NumericLiteral: (i) => String(i).repeat(2) + String( Math.floor(Math.random() * 1e5) ), // Dodgy...
 }
 
+const SURROUNDING_REGEXP = /(^{|}$)/g
+
 const COMPLEX_RULES = [
     {
         visitor: {
@@ -62,8 +64,11 @@ const COMPLEX_RULES = [
                     debug('already processed object attrs')
                     return
                 }
-                const key = `{"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"}`
-                matches = matches.concat({ key, type: 'attributeIdentifiers', original: generate(path.node).code })
+                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
+                const key = `{${base}}` // extra {} to make a full obj
+                const completeRegex = new RegExp(key)
+                const partialRegex = new RegExp(base)
+                matches = matches.concat({ key, completeRegex, partialRegex, type: 'attributeIdentifiers', original: generate(path.node).code })
                 path.replaceWithSourceString(key)
                 debug('replaced object with %s', key)
             }
@@ -71,7 +76,10 @@ const COMPLEX_RULES = [
         transform: function attributeIdentifiers(processed) {
             const objMatches = matches.filter( ({ type }) => type === 'attributeIdentifiers')
             if(objMatches.length !== 0) {
-                const replaced = objMatches.reduce( (str, { key, original }) => str.replace(key, original), processed)
+                const replaced = objMatches.reduce( (str, { completeRegex, partialRegex, original }) => completeRegex.test(str)
+                    ? str.replace(completeRegex, original) // we're the while object `{"fakeKey":"fakeVal"}`
+                    : str.replace(partialRegex, original.replace(SURROUNDING_REGEXP, '')) // we're only part of the object `{"fakeKey":"fakeVal", x: y, ...}`
+                , processed)
                 return replaced
             }
         },
