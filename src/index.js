@@ -99,6 +99,7 @@ const COMPLEX_RULES = [
     }
 ]
 function tryToHandleComplex(path) {
+    debug('processing complex rules')
     const node = JSON.parse(JSON.stringify(path.node))
     matches = []
     COMPLEX_RULES.forEach( ({ visitor }) => path.traverse(visitor) )
@@ -114,7 +115,7 @@ function tryToHandleComplex(path) {
         }, processed)
     } catch(e) {
         debugErrors('Complex node exception (ignoring) %s', e.stack)
-        path.stop()
+        node.moptProcessed = true // TODO there's probably a more proper way to do this
         path.replaceWith(node)
         return null
     }
@@ -122,14 +123,17 @@ function tryToHandleComplex(path) {
 
 const visitor = {
     CallExpression: function(path) {
+        if(path.node.moptProcessed) return
         if(shouldProcess(path.node)) {
             const { code } = generate(path.node)
             try {
                 const replaced = JSON.stringify(process(code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
+                debug(`replacing node with (${replaced})`)
                 path.replaceWithSourceString(`(${replaced})`)
             } catch(e) {
                 const result = tryToHandleComplex(path)
                 if(result) {
+                    debug(`replacing node with (${result})`)
                     path.replaceWithSourceString(`(${result})`)
                 } else {
                     debugErrors('Failed to process node %j because of error %s', e.stack)

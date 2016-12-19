@@ -87,6 +87,17 @@ describe("mithril-objectify", function() {
             run('m("div", m("div", m("div")), m("div"))'),
             m("div", m("div", m("div")), m("div"))
         );
+        it("nested with identifiers", function() {
+            assert.equal(
+                code('m("tr", m("th", "Name"), m("td", obj.name))'),
+                'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":"Name","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
+            );
+
+            assert.equal(
+                code('m("tr", m("th", JSON.stringify(unknown)), m("td", obj.name))'),
+                'm("tr",{"tag":"th","key":undefined,"attrs":undefined,"children":undefined,"text":JSON.stringify(unknown),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},m("td",obj.name));'
+            );
+        });
     });
 
     
