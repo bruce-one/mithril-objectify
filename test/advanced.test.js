@@ -186,10 +186,10 @@ describe("mithril-objectify", function() {
             );
         });
         
-        it.skip("should support expressions", function() {
+        it("should support expressions", function() {
             assert.deepEqual(
                 run('m("div", "fooga" + "wooga")'),
-                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"foogawooga"});')
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":"foogawooga","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
             );
         });
         
