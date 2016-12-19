@@ -5,7 +5,9 @@ const vm = require('vm')
 const t = require('babel-core').types
 const parse = require('babylon').parse
 const generate = require('babel-generator').default
-const debug = require('debug')('mopt')
+const _debug = require('debug')
+const debug = _debug('mopt')
+const debugErrors = _debug('mopt:errors')
 const { isM, isMithrilTrust, isJsonStringify } = require('./valid')
 
 const m = require('mithril/render/hyperscript')
@@ -28,8 +30,11 @@ function shouldProcess(node) {
 let replacementId = 0
 let matches = []
 const INTERNAL_ATTRS_KEY = '__DODGY_MOPT_REPLACE_ATTRS_KEY__'
+const INTERNAL_LITERALS = { // babel/babylon has more literals than this...
+    StringLiteral: (i) => `"__DODGY_MOPT_REPLACE_StringLiteral_${i}__"`,
+    NumericLiteral: (i) => String(i).repeat(2) + String( Math.floor(Math.random() * 1e5) ), // Dodgy...
+}
 
-// TODO could handle ternaries for literals (eg `m('div', x ? 'str1' : 'str2')`
 const COMPLEX_RULES = [
     {
         visitor: {
@@ -70,6 +75,27 @@ const COMPLEX_RULES = [
                 return replaced
             }
         },
+    }, {
+        visitor: {
+            ConditionalExpression: function(path) {
+                const type1 = path.node.consequent.type
+                const type2 = path.node.alternate.type
+                const replacementTmpl = INTERNAL_LITERALS[type1]
+                if(type1 === type2 && replacementTmpl) {
+                    debug('replace conditional %s', type1)
+                    const key = replacementTmpl(replacementId++)
+                    matches = matches.concat({ key, type: 'conditionalExpression', original: generate(path.node).code })
+                    path.replaceWithSourceString( key )
+                }
+            }
+        },
+        transform: function conditionalExpression(processed) {
+            const condMatches = matches.filter( ({ type }) => type === 'conditionalExpression')
+            if(condMatches.length !== 0) {
+                const replaced = condMatches.reduce( (str, { key, original }) => str.replace(key, original), processed)
+                return replaced
+            }
+        }
     }
 ]
 function tryToHandleComplex(path) {
@@ -87,7 +113,7 @@ function tryToHandleComplex(path) {
             return code
         }, processed)
     } catch(e) {
-        debug('Complex node exception %s', e.stack)
+        debugErrors('Complex node exception (ignoring) %s', e.stack)
         path.stop()
         path.replaceWith(node)
         return null
@@ -106,7 +132,7 @@ const visitor = {
                 if(result) {
                     path.replaceWithSourceString(`(${result})`)
                 } else {
-                    debug('Failed to process node %j because of error %s', e.stack)
+                    debugErrors('Failed to process node %j because of error %s', e.stack)
                 }
             }
         }

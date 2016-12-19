@@ -304,10 +304,20 @@ describe("mithril-objectify", function() {
     });
 
     describe("Conditional expression children", function() {
-        it.skip("should convert when all entries are literals", function() {
-            assert.deepEqual(
-                run('m("div", foo ? "bar" : "baz")'),
-                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":foo?"bar":"baz","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+        it("should convert when all entries are literals", function() {
+            assert.equal(
+                code('m("div", foo ? "bar" : "baz")'),
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":foo?"bar":"baz","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+
+            assert.equal(
+                code('m("div", foo ? 1 : 2)'),
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":foo?1:2,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+
+            assert.equal(
+                code('m("div", foo ? 1 : 2, 2)'),
+                '({"tag":"div","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":foo?1:2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
         });
         
@@ -353,10 +363,27 @@ describe("mithril-objectify", function() {
             );
         });
         
-        it("shouldn't transform JSON.parse since it may not be safe", function() {
+        it("should transform JSON.parse when possible", function() {
+            assert.deepEqual(
+                run('m("div", JSON.parse("{}"))'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+
+            assert.deepEqual(
+                run('m("div", JSON.parse(`{"a": 1}`))'),
+                parse('({"tag":"div","key":undefined,"attrs":{"a":1},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+            assert.deepEqual(
+                run('m("div", JSON.parse(`["str"]`))'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":undefined,"text":"str","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
+            assert.deepEqual(
+                run('m("div", JSON.parse("[1, 2]"))'),
+                parse('({"tag":"div","key":undefined,"attrs":undefined,"children":[{"tag":"#","key":undefined,"attrs":undefined,"children":1,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false},{"tag":"#","key":undefined,"attrs":undefined,"children":2,"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});')
+            );
             assert.equal(
-                code('m("div", JSON.parse({}))'),
-                'm("div",JSON.parse({}));'
+                code('m("div", JSON.parse(unknown))'),
+                'm("div",JSON.parse(unknown));'
             );
         });
     });
