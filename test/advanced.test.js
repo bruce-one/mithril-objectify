@@ -60,7 +60,8 @@ describe("mithril-objectify", function() {
             run('m("div", { fooga : undefined })'),
             m("div", { fooga : undefined })
         );
-    })
+    });
+
     it("Non-string attr values (identifiers)", function() {
         assert.equal(
             code('m("div", { fooga : unknown })'),
@@ -328,6 +329,15 @@ describe("mithril-objectify", function() {
             assert.equal(
                 code('m("div", JSON.parse({}))'),
                 'm("div",JSON.parse({}));'
+            );
+        });
+    });
+
+    describe("Multiple rules", function() {
+        it("Non-string attr identifiers with JSON.stringify", function() {
+            assert.equal(
+                code('m("div", { fooga : unknown }, JSON.stringify(unknownJson))'),
+                '({"tag":"div","key":undefined,"attrs":{fooga:unknown},"children":undefined,"text":JSON.stringify(unknownJson),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
         });
     });
