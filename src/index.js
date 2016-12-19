@@ -28,8 +28,8 @@ let jsonMatches = []
 const COMPLEX_FUNCS = [
     function jsonStringify(path) {
         const node = JSON.parse(JSON.stringify(path.node))
+        jsonMatches = []
         path.traverse(jsonVisitor)
-        console.log( generate(path.node).code )
         if(jsonMatches.length !== 0) {
             try {
                 const processed = JSON.stringify(process(generate(path.node).code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
