@@ -182,7 +182,7 @@ exports.isChildren = function(node) {
     }
     
     // m(".fooga", JSON.stringify({}))
-    if(exports.isJsonStringify(node)) {
+    if(exports.isJsonStringify(node) && t.isObjectExpression(node.arguments[0])) {
         return true;
     }
     

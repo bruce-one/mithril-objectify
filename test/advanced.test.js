@@ -277,6 +277,21 @@ describe("mithril-objectify", function() {
                 '({tag:"div",attrs:undefined,children:[JSON.stringify({})],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
             );
         });
+
+        it("should not convert JSON when entries are not objects", function() {
+            assert.equal(
+                code('m("div", JSON.stringify("string"))'),
+                'm("div",JSON.stringify("string"));'
+            );
+        });
+
+        it("should not convert JSON when entries are not literals", function() {
+            assert.equal(
+                code('m("div", JSON.stringify(identifier))'),
+                'm("div",JSON.stringify(identifier));'
+            );
+        });
+        
         
         it("shouldn't transform JSON.parse since it may not be safe", function() {
             assert.equal(
