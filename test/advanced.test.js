@@ -340,5 +340,12 @@ describe("mithril-objectify", function() {
                 '({"tag":"div","key":undefined,"attrs":{fooga:unknown},"children":undefined,"text":JSON.stringify(unknownJson),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
         });
+
+        it("Non-string attr identifiers with JSON.stringify (nested)", function() {
+            assert.equal(
+                code('m("pre", m("code", { fooga : unknown }, JSON.stringify(unknownJson)))'),
+                '({"tag":"pre","key":undefined,"attrs":undefined,"children":[{"tag":"code","key":undefined,"attrs":{fooga:unknown},"children":undefined,"text":JSON.stringify(unknownJson),"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+        });
     });
 });
