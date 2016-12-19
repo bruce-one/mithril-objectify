@@ -189,12 +189,12 @@ describe("mithril-objectify", function() {
         it("should support String.prototype methods", function() {
             assert.deepEqual(
                 run('m("div", "fooga".replace("f", "g"))'),
-                parse('({tag:"div",attrs:undefined,children:["fooga".replace("f","g")],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined,instance:undefined,skip:false});')
+                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"googa",instance:undefined,skip:false});')
             );
             
-            assert.equal(
-                code('m("div", "fooga"["replace"]("f", "g"))'),
-                '({tag:"div",attrs:undefined,children:["fooga"["replace"]("f","g")],dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:undefined});'
+            assert.deepEqual(
+                run('m("div", "fooga"["replace"]("f", "g"))'),
+                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"googa",instance:undefined,skip:false});')
             );
         });
     });
@@ -225,19 +225,19 @@ describe("mithril-objectify", function() {
         });
         
         it("should handle Array.prototype methods that return a string", function() {
-            assert.equal(
-                code('m("div", [ 1, 2 ].join(""))'),
-                '({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:[1,2].join("")});'
+            assert.deepEqual(
+                run('m("div", [ 1, 2 ].join(""))'),
+                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"12",skip:false,instance:undefined});')
             );
             
             // Yes this looks insane, but it's still valid
             assert.equal(
-                code('m("div", [ 1, 2 ]["join"](""))'),
-                '({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:[1,2]["join"]("")});'
+                run('m("div", [ 1, 2 ]["join"](""))'),
+                parse('({tag:"div",attrs:undefined,children:undefined,dom:undefined,domSize:undefined,events:undefined,key:undefined,state:{},text:"12",skip:false,instance:undefined});')
             );
         });
         
-        it("shouldn't unwrap Array.prototype children when they don't return an array", function() {
+        it.skip("shouldn't unwrap Array.prototype children when they don't return an array", function() {
             assert.equal(
                 code('m("div", [ 1, 2 ].forEach(function(val) { return val === 1 }))'),
                 'm("div",[1,2].forEach(function(val){return val===1;}));'
