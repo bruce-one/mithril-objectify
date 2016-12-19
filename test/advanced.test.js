@@ -60,6 +60,12 @@ describe("mithril-objectify", function() {
             run('m("div", { fooga : undefined })'),
             m("div", { fooga : undefined })
         );
+    })
+    it("Non-string attr values (identifiers)", function() {
+        assert.equal(
+            code('m("div", { fooga : unknown })'),
+            '({"tag":"div","key":undefined,"attrs":{fooga:unknown},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
     });
 
     it("Quoted properties (issue #6)", function() {
