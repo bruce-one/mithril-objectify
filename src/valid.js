@@ -1,13 +1,13 @@
 "use strict";
 
 var t = require("babel-core").types,
-    
+
     literals = [
         "StringLiteral",
         "NumericLiteral",
         "BooleanLiteral"
     ],
-    
+
     childrenTypes = [
         "ArrayExpression",
         "BinaryExpression",
@@ -15,7 +15,7 @@ var t = require("babel-core").types,
         "NumericLiteral",
         "BooleanLiteral"
     ],
-    
+
     safeStrings = [
         "fromCharCode",
         "fromCodePoint",
@@ -39,7 +39,7 @@ var t = require("babel-core").types,
         "trimRight",
         "valueOf"
     ],
-    
+
     safeArrayMethodsArray = [
         "concat",
         "copyWithin",
@@ -50,11 +50,11 @@ var t = require("babel-core").types,
         "sort",
         "splice"
     ],
-    
+
     safeArrayMethodsString = [
         "join"
     ],
-    
+
     unsafeTags = [
         "[",
         "#",
@@ -77,13 +77,13 @@ function makeArrayExpressionCheck(valid, node) {
     ) {
         return false;
     }
-    
+
     if(t.isIdentifier(node.callee.property) &&
        valid.indexOf(node.callee.property.name) !== -1
     ) {
         return true;
     }
-    
+
     return t.isStringLiteral(node.callee.property) &&
         valid.indexOf(node.callee.property.value) !== -1;
 }
@@ -111,13 +111,13 @@ exports.isStringExpression = function(node) {
     ) {
         return false;
     }
-    
+
     if(t.isIdentifier(node.callee.property) &&
        safeStrings.indexOf(node.callee.property.name) !== -1
     ) {
         return true;
     }
-    
+
     return t.isStringLiteral(node.callee.property) &&
         safeStrings.indexOf(node.callee.property.value) !== -1;
 };
@@ -155,37 +155,37 @@ exports.isChildren = function(node) {
     if(childrenTypes.indexOf(node.type) > -1) {
         return true;
     }
-    
+
     // m(".fooga", m(".booga"), ...)
     if(exports.isM(node)) {
         return true;
     }
-    
+
     // m(".fooga", [ ... ].map)
     if(exports.isArrayExpression(node)) {
         return true;
     }
-    
+
     // m(".fooga", "foo".replace())
     if(exports.isStringExpression(node)) {
         return true;
     }
-    
+
     // m(".fooga", foo ? "bar" : "baz")
     if(exports.isConditionalExpression(node)) {
         return true;
     }
-    
+
     // m(".fooga", m.trust("<div>"))
     if(exports.isMithrilTrust(node)) {
         return true;
     }
-    
+
     // m(".fooga", JSON.stringify({}))
     if(exports.isJsonStringify(node)) {
         return true;
     }
-    
+
     return false;
 };
 
@@ -195,19 +195,19 @@ exports.isArg = function(node) {
     if(t.isObjectExpression(node)) {
         return true;
     }
-    
+
     return exports.isChildren(node);
 };
 
 // Test to see if a node is a passable mithril invocation
 exports.isMithril = function(node) {
     var first = node.arguments[0];
-    
+
     // m()
     if(!exports.isM(node)) {
         return false;
     }
-    
+
     // m(".fooga" + ".wooga")
     if(t.isBinaryExpression(first, { operator : "+" }) &&
        exports.isValueLiteral(first.left) &&
@@ -215,17 +215,17 @@ exports.isMithril = function(node) {
     ) {
         return true;
     }
-    
+
     // m(".fooga.wooga")
     if(!t.isStringLiteral(first)) {
         return false;
     }
-    
+
     // m(".fooga")
     if(node.arguments.length === 1) {
         return true;
     }
-    
+
     return Array.prototype.slice.call(node.arguments, 1, node.arguments.length).every( function(arg) {
         return exports.isArg(arg);
     });

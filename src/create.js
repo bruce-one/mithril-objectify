@@ -20,11 +20,11 @@ exports.prop = function(key, value) {
 
 exports.vnode = function(state) {
     var fields;
-    
+
     if(!state.attrs.properties.length) {
         state.attrs = t.identifier("undefined");
     }
-    
+
     fields = [
         exports.prop("tag", state.tag),
         exports.prop("attrs", state.attrs),
@@ -36,7 +36,7 @@ exports.vnode = function(state) {
         exports.prop("state", t.objectExpression([])),
         exports.prop("text", state.text)
     ];
-    
+
     if(state.ns) {
         fields.push(exports.prop("ns", state.ns));
     }
@@ -46,9 +46,9 @@ exports.vnode = function(state) {
 
 exports.mTrust = function(html) {
     var state = exports.state();
-    
+
     state.tag = t.stringLiteral("<");
     state.nodes = html;
-    
+
     return exports.vnode(state);
 };

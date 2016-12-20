@@ -4,7 +4,7 @@ var assert = require("assert"),
 
     m     = require("mithril/render/hyperscript"),
     trust = require("mithril/render/trust"),
-    
+
     run = require("./lib/run");
 
 describe("mithril-objectify", function() {
@@ -15,7 +15,7 @@ describe("mithril-objectify", function() {
                 m("div")
             );
         });
-        
+
         it("should support class selectors", function() {
             assert.deepEqual(
                 run('m(".foo")'),
@@ -53,35 +53,35 @@ describe("mithril-objectify", function() {
                     m("div", "test")
                 );
             });
-            
+
             it("should support single literal children (undefined)", function() {
                 assert.deepEqual(
                     run('m("div", [ undefined ])'),
                     m("div", [ undefined ])
                 );
             });
-            
+
             it("should support single literal children (object)", function() {
                 assert.deepEqual(
                     run('m("div", [ { foo : "bar" } ])'),
                     m("div", [ { foo : "bar" } ])
                 );
             });
-            
+
             it("should multiple literal children", function() {
                 assert.deepEqual(
                     run('m("div", "test", "test2")'),
                     m("div", "test", "test2")
                 );
             });
-            
+
             it("should support attrs + single children", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, "test")'),
                     m("div", { title : "bar" }, "test")
                 );
             });
-            
+
             it("should support attrs + multiple children", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, "test0", "test1", "test2", "test3")'),
@@ -89,20 +89,20 @@ describe("mithril-objectify", function() {
                 );
             });
         });
-        
+
         describe("Array Children", function() {
             it("should support array children", function() {
                 assert.deepEqual(
                     run('m("div", [ "test" ])'),
                     m("div", [ "test" ])
                 );
-                
+
                 assert.deepEqual(
                     run('m("div", [ 1, 2, 3 ])'),
                     m("div", [ 1, 2, 3 ])
                 );
             });
-            
+
             it("should support attrs + array children", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, [ "test" ])'),
@@ -110,8 +110,8 @@ describe("mithril-objectify", function() {
                 );
             });
         });
-        
-        
+
+
         describe("Nested m()", function() {
             it("should support nested m() invocations", function() {
                 assert.deepEqual(
@@ -119,45 +119,45 @@ describe("mithril-objectify", function() {
                     m("div", m("div"))
                 );
             });
-            
+
             it("should support arrays of nested m() invocations", function() {
                 assert.deepEqual(
                     run('m("div", [ m("div") ])'),
                     m("div", [ m("div") ])
                 );
-                
+
                 assert.deepEqual(
                     run('m("div", [ m("p") ])'),
                     m("div", [ m("p") ])
                 );
-                
+
                 assert.deepEqual(
                     run('m("div", [ m("a[href=\'http://google.com\']") ])'),
                     m("div", [ m("a[href='http://google.com']") ])
                 );
             });
-            
+
             it("should support multiple nested m() invocations", function() {
                 assert.deepEqual(
                     run('m("div", m("div"), m("i"), m("span"))'),
                     m("div", m("div"), m("i"), m("span"))
                 );
             });
-            
+
             it("should support attrs + nested m() invocations", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, m("div"))'),
                     m("div", { title : "bar" }, m("div"))
                 );
             });
-            
+
             it("should supported attrs + arrays of nested m() invocations", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, [ m("div") ])'),
                     m("div", { title : "bar" }, [ m("div") ])
                 );
             });
-            
+
             it("should support attrs + multiple nested m() invocations", function() {
                 assert.deepEqual(
                     run('m("div", { title : "bar" }, m("div"), m("i"), m("span"))'),
@@ -165,7 +165,7 @@ describe("mithril-objectify", function() {
                 );
             });
         });
-        
+
         describe("Mixed Children", function() {
             it("should support mixed array and literal children", function() {
                 assert.deepEqual(
@@ -173,13 +173,13 @@ describe("mithril-objectify", function() {
                     m("div", [ 1 ], 2)
                 );
             });
-            
+
             it("should support multiple arrays of children", function() {
                 assert.deepEqual(
                     run('m("div", [ 1, 2, 3 ], [ 4, 5, 6, 7 ])'),
                     m("div", [ 1, 2, 3 ], [ 4, 5, 6, 7 ])
                 );
-                
+
                 assert.deepEqual(
                     run('m("div", [ 1 ], [ 2 ], [ 3 ])'),
                     m("div", [ 1 ], [ 2 ], [ 3 ])
@@ -202,14 +202,14 @@ describe("mithril-objectify", function() {
                 m(".foo", { className : "bar" })
             );
         });
-        
+
         it("should combine tag class & attr className", function() {
             assert.deepEqual(
                 run('m(".foo[checked]", { className : "bar" })'),
                 m(".foo[checked]", { className : "bar" })
             );
         });
-        
+
         it("selector class, empty className attr", function() {
             assert.deepEqual(
                 run('m(".foo", { className : "" })'),
@@ -231,7 +231,7 @@ describe("mithril-objectify", function() {
             );
         });
     });
-    
+
     describe("SVG", function() {
         it("should support svg selectors", function() {
             assert.deepEqual(
@@ -239,7 +239,7 @@ describe("mithril-objectify", function() {
                 m("svg")
             );
         });
-        
+
         it("should support nested svg selectors", function() {
             assert.deepEqual(
                 run('m("svg", m("g"))'),
@@ -247,7 +247,7 @@ describe("mithril-objectify", function() {
             );
         });
     });
-    
+
     describe("m.trust", function() {
         // These tests aren't using m.trust, but trust is the same thing
         it("should optimize a bare m.trust()", function() {
@@ -256,7 +256,7 @@ describe("mithril-objectify", function() {
                 trust("<div>")
             );
         });
-        
+
         it("should optimize m.trust() children", function() {
             assert.deepEqual(
                 run('m("div", m.trust("<div>"))'),

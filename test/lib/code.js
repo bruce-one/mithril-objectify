@@ -2,7 +2,7 @@
 
 var babel  = require("babel-core"),
     assign = require("lodash.assign"),
-    
+
     plugin = require("../../");
 
 module.exports = function(source, options) {
@@ -12,6 +12,6 @@ module.exports = function(source, options) {
                 plugin
             ]
         }, options || {}));
-    
+
     return result.code;
 };
