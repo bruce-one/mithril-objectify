@@ -13,6 +13,8 @@ const { isM, isMithrilTrust, isJsonStringify } = require('./valid')
 const m = require('mithril/render/hyperscript')
 m.trust = require('mithril/render/trust')
 
+let activeComplexRules
+
 const DODGY_MOPT_REPLACE = '__DODGY_MOPT_REPLACE__'
 
 const UNDEFINED_REGEX = new RegExp(`"${DODGY_MOPT_REPLACE}"`, 'g')
@@ -106,21 +108,42 @@ const COMPLEX_RULES = [
         }
     }
 ]
+
+const UPPERCASE_REGEX = /[A-Z]/
+
+function componentVisitor(path) {
+    const tag = path.node.arguments[0]
+    if(t.isIdentifier(tag) && UPPERCASE_REGEX.test(tag.name[0])) {
+        const key = `{"view":"DODGY_MOPT_REPLACE_COMPONENT_${replacementId++}__"}`
+        matches = matches.concat({ key, type: 'component', original: tag.name })
+        path.replaceWith(t.callExpression(path.node.callee, [ t.identifier(key) ].concat(path.node.arguments.slice(1))))
+    }
+}
+function componentReplacer(processed) {
+    const componentMatches = matches.filter( ({ type }) => type === 'component')
+    if(componentMatches.length !== 0) {
+        const replaced = componentMatches.reduce( (str, { key, original }) => str.replace(key, original), processed)
+        return replaced
+    }
+    return processed
+}
+
 function tryToHandleComplex(path) {
     debug('processing complex rules')
     const node = JSON.parse(JSON.stringify(path.node))
     matches = []
-    COMPLEX_RULES.forEach( ({ visitor }) => path.traverse(visitor) )
+    componentVisitor(path) // TODO unclean...
+    activeComplexRules.forEach( ({ visitor }) => path.traverse(visitor) )
     try {
         const processed = JSON.stringify(process(generate(path.node).code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
-        return COMPLEX_RULES.reduce( (code, { transform }) => {
+        return activeComplexRules.reduce( (code, { transform }) => {
             const updatedCode = transform(code)
             if(updatedCode && updatedCode !== code) {
                 path.replaceWithSourceString(`(${updatedCode})`)
                 return updatedCode
             }
             return code
-        }, processed)
+        }, componentReplacer(processed))
     } catch(e) {
         debugErrors('Complex node exception (ignoring) %s', e.stack)
         node.moptProcessed = true // TODO there's probably a more proper way to do this
@@ -153,6 +176,7 @@ const visitor = {
 }
 
 module.exports = function() {
+    activeComplexRules = COMPLEX_RULES
     return {
         visitor
     }

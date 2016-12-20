@@ -427,4 +427,30 @@ describe("mithril-objectify", function() {
             );
         });
     });
+    describe('components', function() {
+        it('should handle simple component tags', function() {
+            assert.equal(
+                code('m(Component)'),
+                '({"tag":Component,"key":undefined,"attrs":{},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+        });
+        it('should handle component tags with other arguments', function() {
+            assert.equal(
+                code('m(Component, {x: 1})'),
+                '({"tag":Component,"key":undefined,"attrs":{x:1},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.equal(
+                code('m(Component, m("div"))'),
+                '({"tag":Component,"key":undefined,"attrs":{},"children":[{"tag":"div","key":undefined,"attrs":undefined,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.equal(
+                code('m(Component, {x: 1}, m("div"))'),
+                '({"tag":Component,"key":undefined,"attrs":{x:1},"children":[{"tag":"div","key":undefined,"attrs":undefined,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.equal(
+                code('m(Component, {x: 1}, m("div", {y: 2}))'),
+                '({"tag":Component,"key":undefined,"attrs":{x:1},"children":[{"tag":"div","key":undefined,"attrs":{y:2},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+        });
+    })
 });
