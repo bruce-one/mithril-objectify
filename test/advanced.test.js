@@ -460,4 +460,28 @@ describe("mithril-objectify", function() {
             );
         });
     })
+    it('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
+        const opts = { assignNeverComponent: true }
+        assert.equal( // check this is disabled by default
+            code('m("span", Object.assign({}, x))'),
+            'm("span",Object.assign({},x));'
+        )
+        assert.equal( // check this is disabled
+            code('m("span", Object.assign({}, x))', null, { assignNeverComponent: false }),
+            'm("span",Object.assign({},x));'
+        )
+
+        assert.equal(
+            code('m("span", Object.assign({}, x))', null, opts),
+            '({"tag":"span","key":undefined,"attrs":Object.assign({},x),"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+        assert.equal( // can't do it if we don't know if it's an object
+            code('m("span", Object.assign(x, y))', null, opts),
+            'm("span",Object.assign(x,y));'
+        );
+        assert.equal(
+            code('m("span", Object.assign({}, x), "a")', null, opts),
+            '({"tag":"span","key":undefined,"attrs":Object.assign({},x),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+    })
 });

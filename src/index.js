@@ -8,13 +8,13 @@ const generate = require('babel-generator').default
 const _debug = require('debug')
 const debug = _debug('mopt')
 const debugErrors = _debug('mopt:errors')
-const { isM, isMithrilTrust, isJsonStringify } = require('./valid')
+const { isM, isMithrilTrust, isJsonStringify, isObjectAssign } = require('./valid')
 const literalToAst = require('./literal-to-ast')
 
 const m = require('mithril/render/hyperscript')
 m.trust = require('mithril/render/trust')
 
-let activeComplexRules
+let activeComplexRules, activeTopLevelComplexRules
 
 const DODGY_MOPT_REPLACE = '__DODGY_MOPT_REPLACE__'
 
@@ -134,13 +134,35 @@ const TOP_LEVEL = [
             return processed
         }
     }
+    , {
+        visitor: function objAssignVisitor(path, { opts: { assignNeverComponent } }) {
+            if(assignNeverComponent !== true ) return
+            const attrs = path.node.arguments[1]
+            if(isObjectAssign(attrs) && t.isObjectExpression(attrs.arguments[0])) { // TODO
+                debug('processing Object.assign')
+                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
+                const key = `{${base}}`
+                const regex = new RegExp(`{\\s*${base.replace(':', ': *')}\\s*}`)
+                matches = matches.concat({ key, regex, type: 'objAssign', original: generate(attrs).code })
+                path.replaceWith(t.callExpression(path.node.callee, [ path.node.arguments[0] ].concat([ t.identifier(key) ]).concat(path.node.arguments.slice(2))))
+            }
+        }
+        , transform: function objAssignReplacer(processed) {
+            const objAssignMatches = matches.filter( ({ type }) => type === 'objAssign')
+            if(objAssignMatches.length !== 0) {
+                const replaced = objAssignMatches.reduce( (str, { regex, original }) => str.replace(regex, original), processed)
+                return replaced
+            }
+            return processed
+        }
+    }
 ]
 
-function tryToHandleComplex(path) {
+function tryToHandleComplex(path, state) {
     debug('processing complex rules')
     const node = JSON.parse(JSON.stringify(path.node))
     matches = []
-    TOP_LEVEL.forEach( ({ visitor: func }) => func(path) )
+    activeTopLevelComplexRules.forEach( ({ visitor: func }) => func(path, state) )
     activeComplexRules.forEach( ({ visitor }) => path.traverse(visitor) )
     try {
         const processed = generate(literalToAst(process(generate(path.node).code))).code
@@ -151,7 +173,7 @@ function tryToHandleComplex(path) {
                 return updatedCode
             }
             return code
-        }, TOP_LEVEL.map( ({ transform }) => transform).reduce( (res, t) => t(res), processed))
+        }, activeTopLevelComplexRules.map( ({ transform }) => transform).reduce( (res, t) => t(res), processed))
     } catch(e) {
         debugErrors('Complex node exception (ignoring) %s', e.stack)
         node.moptProcessed = true // TODO there's probably a more proper way to do this
@@ -167,14 +189,14 @@ function tryAndReplace(path, processed) {
 }
 
 const visitor = {
-    CallExpression: function(path) {
+    CallExpression: function(path, state) {
         if(path.node.moptProcessed) return
         if(shouldProcess(path.node)) {
             const { code } = generate(path.node)
             try {
                 tryAndReplace(path, process(code))
             } catch(e) {
-                const result = tryToHandleComplex(path)
+                const result = tryToHandleComplex(path, state)
                 if(result) {
                     debug(`replacing node with (${result})`)
                     path.replaceWithSourceString(`(${result})`)
@@ -189,6 +211,7 @@ const visitor = {
 
 module.exports = function() {
     activeComplexRules = COMPLEX_RULES
+    activeTopLevelComplexRules = TOP_LEVEL
     return {
         visitor
     }

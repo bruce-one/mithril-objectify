@@ -5,11 +5,11 @@ var babel  = require("babel-core"),
 
     plugin = require("../../");
 
-module.exports = function(source, options) {
+module.exports = function(source, options, pluginOpts) {
     var result = babel.transform(source, assign({
             compact : true,
             plugins : [
-                plugin
+                [ plugin, pluginOpts ]
             ]
         }, options || {}));
 

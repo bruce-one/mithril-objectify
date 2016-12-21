@@ -132,6 +132,9 @@ exports.isConditionalExpression = function(node) {
 // JSON.stringify( ... )
 exports.isJsonStringify = makeCallExpressionCheck("JSON", "stringify");
 
+// Object.assign
+exports.isObjectAssign = makeCallExpressionCheck("Object", "assign");
+
 exports.isSafeTag = function(state) {
     return unsafeTags.indexOf(state.tag.value) === -1;
 };

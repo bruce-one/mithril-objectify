@@ -5,10 +5,10 @@ var vm    = require("vm"),
 
     plugin = require("../../");
 
-module.exports = function(source) {
+module.exports = function(source, _, pluginOpts = {}) {
     var result = babel.transform(source, {
             plugins : [
-                plugin
+                [ plugin, pluginOpts ]
             ]
         });
 
