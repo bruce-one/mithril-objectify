@@ -69,8 +69,9 @@ const COMPLEX_RULES = [
                 }
                 const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
                 const key = `{${base}}` // extra {} to make a full obj
-                const completeRegex = new RegExp(key)
-                const partialRegex = new RegExp(base)
+                const baseRegex = base.replace(':', ': *')
+                const completeRegex = new RegExp(`{${baseRegex}}`)
+                const partialRegex = new RegExp(baseRegex)
                 matches = matches.concat({ key, completeRegex, partialRegex, type: 'attributeIdentifiers', original: generate(path.node).code })
                 path.replaceWithSourceString(key)
                 debug('replaced object with %s', key)
@@ -112,31 +113,37 @@ const COMPLEX_RULES = [
 
 const UPPERCASE_REGEX = /[A-Z]/
 
-function componentVisitor(path) {
-    const tag = path.node.arguments[0]
-    if(t.isIdentifier(tag) && UPPERCASE_REGEX.test(tag.name[0])) {
-        const key = `{"view":"DODGY_MOPT_REPLACE_COMPONENT_${replacementId++}__"}`
-        matches = matches.concat({ key, type: 'component', original: tag.name })
-        path.replaceWith(t.callExpression(path.node.callee, [ t.identifier(key) ].concat(path.node.arguments.slice(1))))
+const TOP_LEVEL = [
+    {
+        visitor: function componentVisitor(path) {
+            const tag = path.node.arguments[0]
+            if(t.isIdentifier(tag) && UPPERCASE_REGEX.test(tag.name[0])) {
+                const base = `"view":"DODGY_MOPT_REPLACE_COMPONENT_${replacementId++}__"`
+                const key = `{${base}}`
+                const regex = new RegExp(`{\\s*${base.replace(':', ': *')}\\s*}`)
+                matches = matches.concat({ key, regex, type: 'component', original: tag.name })
+                path.replaceWith(t.callExpression(path.node.callee, [ t.identifier(key) ].concat(path.node.arguments.slice(1))))
+            }
+        }
+        , transform: function componentReplacer(processed) {
+            const componentMatches = matches.filter( ({ type }) => type === 'component')
+            if(componentMatches.length !== 0) {
+                const replaced = componentMatches.reduce( (str, { regex, original }) => str.replace(regex, original), processed)
+                return replaced
+            }
+            return processed
+        }
     }
-}
-function componentReplacer(processed) {
-    const componentMatches = matches.filter( ({ type }) => type === 'component')
-    if(componentMatches.length !== 0) {
-        const replaced = componentMatches.reduce( (str, { key, original }) => str.replace(key, original), processed)
-        return replaced
-    }
-    return processed
-}
+]
 
 function tryToHandleComplex(path) {
     debug('processing complex rules')
     const node = JSON.parse(JSON.stringify(path.node))
     matches = []
-    componentVisitor(path) // TODO unclean...
+    TOP_LEVEL.forEach( ({ visitor: func }) => func(path) )
     activeComplexRules.forEach( ({ visitor }) => path.traverse(visitor) )
     try {
-        const processed = JSON.stringify(process(generate(path.node).code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
+        const processed = generate(literalToAst(process(generate(path.node).code))).code
         return activeComplexRules.reduce( (code, { transform }) => {
             const updatedCode = transform(code)
             if(updatedCode && updatedCode !== code) {
@@ -144,7 +151,7 @@ function tryToHandleComplex(path) {
                 return updatedCode
             }
             return code
-        }, componentReplacer(processed))
+        }, TOP_LEVEL.map( ({ transform }) => transform).reduce( (res, t) => t(res), processed))
     } catch(e) {
         debugErrors('Complex node exception (ignoring) %s', e.stack)
         node.moptProcessed = true // TODO there's probably a more proper way to do this
