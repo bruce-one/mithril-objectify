@@ -13,7 +13,7 @@ TODO
 - [ ] Could consider unsafe transforms (via flags?)
       * [ ] Pick up intelligible like `m('div', vnode.attrs)` as an obj,
             or `m('div', vnode.children)`
-      * [ ] Inject more globals, eg `classNames` (might not be useful?)
+      * [ ] Inject more "globals", eg `classNames` (might not be useful?)
       * [x] Is there a way to support components? eg `m(AssumeComponent, ...)`
             - [ ] Is it safe?
       * [ ] Object.assign

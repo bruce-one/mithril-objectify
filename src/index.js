@@ -9,6 +9,7 @@ const _debug = require('debug')
 const debug = _debug('mopt')
 const debugErrors = _debug('mopt:errors')
 const { isM, isMithrilTrust, isJsonStringify } = require('./valid')
+const literalToAst = require('./literal-to-ast')
 
 const m = require('mithril/render/hyperscript')
 m.trust = require('mithril/render/trust')
@@ -152,15 +153,19 @@ function tryToHandleComplex(path) {
     }
 }
 
+function tryAndReplace(path, processed) {
+    const { code } = generate(literalToAst(processed))
+    debug(`replacing node with (${code})`)
+    path.replaceWithSourceString( code )
+}
+
 const visitor = {
     CallExpression: function(path) {
         if(path.node.moptProcessed) return
         if(shouldProcess(path.node)) {
             const { code } = generate(path.node)
             try {
-                const replaced = JSON.stringify(process(code), (_, v) => v === void 0 ? DODGY_MOPT_REPLACE : v).replace(UNDEFINED_REGEX, 'undefined')
-                debug(`replacing node with (${replaced})`)
-                path.replaceWithSourceString(`(${replaced})`)
+                tryAndReplace(path, process(code))
             } catch(e) {
                 const result = tryToHandleComplex(path)
                 if(result) {

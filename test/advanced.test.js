@@ -69,6 +69,13 @@ describe("mithril-objectify", function() {
         );
     });
 
+    it("Non-string attr values (functions)", function() {
+        assert.equal(
+            code('m("div", { fooga : () => { return x } })'),
+            '({"tag":"div","key":undefined,"attrs":{fooga:()=>{return x;}},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+    });
+
     it("Non-string attr values with inline syntax (identifiers)", function() { // TODO this isn't very exhaustive...
         assert.equal(
             code('m("div[a=b]", { fooga : unknown })'),
