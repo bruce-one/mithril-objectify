@@ -137,22 +137,28 @@ const TOP_LEVEL = [
     , {
         visitor: function objAssignVisitor(path, { opts: { assignNeverComponent } }) {
             if(assignNeverComponent !== true ) return
+            const tag = generate(path.node.arguments[0]).code
             const attrs = path.node.arguments[1]
             if(isObjectAssign(attrs) && t.isObjectExpression(attrs.arguments[0])) { // TODO
                 debug('processing Object.assign')
                 const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
                 const key = `{${base}}`
                 const regex = new RegExp(`{\\s*${base.replace(':', ': *')}\\s*}`)
-                matches = matches.concat({ key, regex, type: 'objAssign', original: generate(attrs).code })
+                matches = matches.concat({ key, regex, tag, base, type: 'objAssign', original: generate(attrs).code })
                 path.replaceWith(t.callExpression(path.node.callee, [ path.node.arguments[0] ].concat([ t.identifier(key) ]).concat(path.node.arguments.slice(2))))
             }
         }
         , transform: function objAssignReplacer(processed) {
             const objAssignMatches = matches.filter( ({ type }) => type === 'objAssign')
             if(objAssignMatches.length !== 0) {
-                const replaced = objAssignMatches.reduce( (str, { regex, original }) => {
+                const replaced = objAssignMatches.reduce( (str, { tag, base, regex, original }) => {
                     const strReplace = str.replace(regex, original)
-                    if(str === strReplace) throw new Error('TODO: Object.assign replacement failed.')
+                    if(str === strReplace) {
+                        const { attrs } = process(`m(${tag})`)
+                        const complexStrReplace = str.replace(new RegExp(`{\\s*${base.replace(':', ': *')},([^}]*)}`), `${original.slice(0, original.length - 1)},{$1})`)
+                        if(complexStrReplace !== str) return complexStrReplace
+                        throw new Error('TODO: Object.assign replacement failed.')
+                    }
                     return strReplace
                 }, processed)
                 return replaced

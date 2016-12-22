@@ -483,8 +483,11 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span[x=y]", Object.assign({}, x), "a")', null, opts),
-            'm("span[x=y]",Object.assign({},x),"a");'
-            //'({"tag":"span","key":undefined,"attrs":Object.assign({},x,{x:"y"}),"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '({"tag":"span","key":undefined,"attrs":Object.assign({},x,{"x":"y"}),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+        );
+        assert.equal(
+            code('m("span[x=y][m=n]", Object.assign({}, x), "a")', null, opts),
+            '({"tag":"span","key":undefined,"attrs":Object.assign({},x,{"x":"y","m":"n"}),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
         );
 
         assert.equal(
