@@ -16,6 +16,7 @@ m.trust = require('mithril/render/trust')
 
 let activeComplexRules, activeTopLevelComplexRules
 
+const DODGY_MOPT = /__DODGY_MOPT/
 const DODGY_MOPT_REPLACE = '__DODGY_MOPT_REPLACE__'
 
 const UNDEFINED_REGEX = new RegExp(`"${DODGY_MOPT_REPLACE}"`, 'g')
@@ -207,7 +208,7 @@ const visitor = {
                 tryAndReplace(path, process(code))
             } catch(e) {
                 const result = tryToHandleComplex(path, state)
-                if(result) {
+                if(result && !DODGY_MOPT.test(result)) {
                     debug(`replacing node with (${result})`)
                     path.replaceWithSourceString(`(${result})`)
                 } else {
