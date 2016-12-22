@@ -150,7 +150,11 @@ const TOP_LEVEL = [
         , transform: function objAssignReplacer(processed) {
             const objAssignMatches = matches.filter( ({ type }) => type === 'objAssign')
             if(objAssignMatches.length !== 0) {
-                const replaced = objAssignMatches.reduce( (str, { regex, original }) => str.replace(regex, original), processed)
+                const replaced = objAssignMatches.reduce( (str, { regex, original }) => {
+                    const strReplace = str.replace(regex, original)
+                    if(str === strReplace) throw new Error('TODO: Object.assign replacement failed.')
+                    return strReplace
+                }, processed)
                 return replaced
             }
             return processed

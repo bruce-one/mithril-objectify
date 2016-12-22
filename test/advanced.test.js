@@ -460,7 +460,7 @@ describe("mithril-objectify", function() {
             );
         });
     })
-    it,skip('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
+    it('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
         const opts = { assignNeverComponent: true }
         assert.equal( // check this is disabled by default
             code('m("span", Object.assign({}, x))'),
@@ -483,7 +483,8 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span[x=y]", Object.assign({}, x), "a")', null, opts),
-            'm("span[x=y]",Object.assign({},x),"a")'
+            'm("span[x=y]",Object.assign({},x),"a");'
+            //'({"tag":"span","key":undefined,"attrs":Object.assign({},x,{x:"y"}),"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
         );
 
         assert.equal(
