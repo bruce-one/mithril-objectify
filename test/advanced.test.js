@@ -481,7 +481,7 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span", Object.assign({}, x))', null, opts),
-            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x));'
+            '(function(__mopt_attrs__){return{"tag":"span","key":__mopt_attrs__.key,"attrs":__mopt_attrs__,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x));'
         );
 
         assert.equal( // can't do it if we don't know if it's an object
@@ -491,21 +491,21 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span[x=y]", Object.assign({}, x), "a")', null, opts),
-            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y"}));'
+            '(function(__mopt_attrs__){return{"tag":"span","key":__mopt_attrs__.key,"attrs":__mopt_attrs__,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y"}));'
         );
         assert.equal(
             code('m("span[x=y][m=n]", Object.assign({}, x), "a")', null, opts),
-            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y","m":"n"}));'
+            '(function(__mopt_attrs__){return{"tag":"span","key":__mopt_attrs__.key,"attrs":__mopt_attrs__,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y","m":"n"}));'
         );
 
         assert.equal(
             code('m("span", Object.assign({}, x), "a")', null, opts),
-            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x));'
+            '(function(__mopt_attrs__){return{"tag":"span","key":__mopt_attrs__.key,"attrs":__mopt_attrs__,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x));'
         );
 
         assert.equal(
             code('m("span", Object.assign({}, x, {key: 1}), "a")', null, opts),
-            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{key:1}));'
+            '(function(__mopt_attrs__){return{"tag":"span","key":__mopt_attrs__.key,"attrs":__mopt_attrs__,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{key:1}));'
         );
     })
 });

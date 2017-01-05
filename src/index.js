@@ -168,18 +168,18 @@ const TOP_LEVEL = [
             const objAssignMatches = matches.filter( ({ type }) => type === 'objAssign')
             if(objAssignMatches.length !== 0) {
                 const replaced = objAssignMatches.reduce( (str, { tag, base, regex, original, mKeyRegex }) => {
-                    let replacedAttrs = str.replace(regex, 'attrs')
+                    let replacedAttrs = str.replace(regex, '__mopt_attrs__')
                     let attrs = original
                     if(replacedAttrs === str) {
                         attrs = str.replace(new RegExp(`^.*{\\s*${base.replace(':', ': *')},([^}]*)}.*$`), `${original.slice(0, original.length - 1)},{$1})`)
-                        replacedAttrs = str.replace(new RegExp(`{\\s*${base.replace(':', ': *')},([^}]*)}`), 'attrs')
+                        replacedAttrs = str.replace(new RegExp(`{\\s*${base.replace(':', ': *')},([^}]*)}`), '__mopt_attrs__')
                     }
-                    const strReplace = replacedAttrs.replace(mKeyRegex, 'attrs.key')
+                    const strReplace = replacedAttrs.replace(mKeyRegex, '__mopt_attrs__.key')
                     if(DODGY_MOPT.test(strReplace)) {
                         debug('Object.assign replacement failed: "%s"', strReplace)
                         throw new Error('Object.assign replacement failed.')
                     }
-                    return `(function(attrs){return ${strReplace}})(${attrs})`
+                    return `(function(__mopt_attrs__){return ${strReplace}})(${attrs})`
                 }, processed)
                 return replaced
             }
