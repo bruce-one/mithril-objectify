@@ -156,25 +156,30 @@ const TOP_LEVEL = [
             const attrs = path.node.arguments[1]
             if(isObjectAssign(attrs) && t.isObjectExpression(attrs.arguments[0])) { // TODO
                 debug('processing Object.assign')
-                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
+                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId}__","key":"__DODGY_MOPT_REPLACE_KEY_${replacementId}__"`
                 const key = `{${base}}`
                 const regex = new RegExp(`{\\s*${base.replace(':', ': *')}\\s*}`)
-                matches = matches.concat({ key, regex, tag, base, type: 'objAssign', original: generate(attrs).code })
+                matches = matches.concat({ key, regex, tag, base, type: 'objAssign', original: generate(attrs).code, mKeyRegex: new RegExp(`"__DODGY_MOPT_REPLACE_KEY_${replacementId}__"`) })
                 path.replaceWith(t.callExpression(path.node.callee, [ path.node.arguments[0] ].concat([ t.identifier(key) ]).concat(path.node.arguments.slice(2))))
+                replacementId++
             }
         }
         , transform: function objAssignReplacer(processed) {
             const objAssignMatches = matches.filter( ({ type }) => type === 'objAssign')
             if(objAssignMatches.length !== 0) {
-                const replaced = objAssignMatches.reduce( (str, { tag, base, regex, original }) => {
-                    const strReplace = str.replace(regex, original)
-                    if(str === strReplace) {
-                        const { attrs } = process(`m(${tag})`)
-                        const complexStrReplace = str.replace(new RegExp(`{\\s*${base.replace(':', ': *')},([^}]*)}`), `${original.slice(0, original.length - 1)},{$1})`)
-                        if(complexStrReplace !== str) return complexStrReplace
-                        throw new Error('TODO: Object.assign replacement failed.')
+                const replaced = objAssignMatches.reduce( (str, { tag, base, regex, original, mKeyRegex }) => {
+                    let replacedAttrs = str.replace(regex, 'attrs')
+                    let attrs = original
+                    if(replacedAttrs === str) {
+                        attrs = str.replace(new RegExp(`^.*{\\s*${base.replace(':', ': *')},([^}]*)}.*$`), `${original.slice(0, original.length - 1)},{$1})`)
+                        replacedAttrs = str.replace(new RegExp(`{\\s*${base.replace(':', ': *')},([^}]*)}`), 'attrs')
                     }
-                    return strReplace
+                    const strReplace = replacedAttrs.replace(mKeyRegex, 'attrs.key')
+                    if(DODGY_MOPT.test(strReplace)) {
+                        debug('Object.assign replacement failed: "%s"', strReplace)
+                        throw new Error('Object.assign replacement failed.')
+                    }
+                    return `(function(attrs){return ${strReplace}})(${attrs}||{})`
                 }, processed)
                 return replaced
             }

@@ -468,7 +468,7 @@ describe("mithril-objectify", function() {
             );
         });
     })
-    it.skip('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
+    it('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
         const opts = { assignNeverComponent: true }
         assert.equal( // check this is disabled by default
             code('m("span", Object.assign({}, x))'),
@@ -481,7 +481,7 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span", Object.assign({}, x))', null, opts),
-            '({"tag":"span","key":undefined,"attrs":Object.assign({},x),"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x)||{});'
         );
 
         assert.equal( // can't do it if we don't know if it's an object
@@ -491,21 +491,21 @@ describe("mithril-objectify", function() {
 
         assert.equal(
             code('m("span[x=y]", Object.assign({}, x), "a")', null, opts),
-            '({"tag":"span","key":undefined,"attrs":Object.assign({},x,{"x":"y"}),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y"})||{});'
         );
         assert.equal(
             code('m("span[x=y][m=n]", Object.assign({}, x), "a")', null, opts),
-            '({"tag":"span","key":undefined,"attrs":Object.assign({},x,{"x":"y","m":"n"}),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{"x":"y","m":"n"})||{});'
         );
 
         assert.equal(
             code('m("span", Object.assign({}, x), "a")', null, opts),
-            '({"tag":"span","key":undefined,"attrs":Object.assign({},x),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x)||{});'
         );
 
         assert.equal(
             code('m("span", Object.assign({}, x, {key: 1}), "a")', null, opts),
-            '({"tag":"span","key":1,"attrs":Object.assign({},x),"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            '(function(attrs){return{"tag":"span","key":attrs.key,"attrs":attrs,"children":undefined,"text":"a","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false};})(Object.assign({},x,{key:1})||{});'
         );
     })
 });
