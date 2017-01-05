@@ -394,6 +394,13 @@ describe("mithril-objectify", function() {
             );
         });
 
+        it("should not interfere with nested JSON.stringifies", function() {
+            assert.equal(
+                code('m("div", { oncreate: function() {console.log(JSON.stringify({}, null, 2)) } }, "y")'),
+                '({"tag":"div","key":undefined,"attrs":{oncreate:function(){console.log(JSON.stringify({},null,2));}},"children":undefined,"text":"y","dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+        });
+
         it("should transform JSON.parse when possible", function() {
             assert.deepEqual(
                 run('m("div", JSON.parse("{}"))'),

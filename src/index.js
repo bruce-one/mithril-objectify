@@ -188,7 +188,19 @@ const TOP_LEVEL = [
     }
 ]
 
+function runPass(path, processed) {
+    return activeComplexRules.reduce( (code, { transform }) => {
+        const updatedCode = transform(code)
+        if(updatedCode && updatedCode !== code) {
+            path.replaceWithSourceString(`(${updatedCode})`)
+            return updatedCode
+        }
+        return code
+    }, activeTopLevelComplexRules.map( ({ transform }) => transform).reduce( (res, t) => t(res), processed))
+}
+
 function tryToHandleComplex(path, state) {
+    const { opts: { repeatLimit = 1 } } = state
     debug('processing complex rules')
     const node = JSON.parse(JSON.stringify(path.node))
     matches = []
@@ -196,14 +208,15 @@ function tryToHandleComplex(path, state) {
     activeComplexRules.forEach( ({ visitor }) => path.traverse(visitor) )
     try {
         const processed = generate(literalToAst(process(generate(path.node).code))).code
-        return activeComplexRules.reduce( (code, { transform }) => {
-            const updatedCode = transform(code)
-            if(updatedCode && updatedCode !== code) {
-                path.replaceWithSourceString(`(${updatedCode})`)
-                return updatedCode
-            }
-            return code
-        }, activeTopLevelComplexRules.map( ({ transform }) => transform).reduce( (res, t) => t(res), processed))
+        let iteration = 0
+        let current = runPass(path, processed)
+        let previous
+        while(iteration++ < repeatLimit) {
+            if(!DODGY_MOPT.test(current)) return current
+            previous = current
+            current = runPass(path, current)
+            if(previous === current) return current
+        }
     } catch(e) {
         debugErrors('Complex node exception (ignoring) %s', e.stack)
         node.moptProcessed = true // TODO there's probably a more proper way to do this
