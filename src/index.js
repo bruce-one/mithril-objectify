@@ -179,7 +179,7 @@ const TOP_LEVEL = [
                         debug('Object.assign replacement failed: "%s"', strReplace)
                         throw new Error('Object.assign replacement failed.')
                     }
-                    return `(function(attrs){return ${strReplace}})(${attrs}||{})`
+                    return `(function(attrs){return ${strReplace}})(${attrs})`
                 }, processed)
                 return replaced
             }
