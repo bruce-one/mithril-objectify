@@ -4,7 +4,7 @@ Error.stackTraceLimit = Infinity
 const vm = require('vm')
 const t = require('babel-core').types
 const parse = require('babylon').parse
-const generate = require('babel-generator').default
+const babelGenerate = require('babel-generator').default
 const _debug = require('debug')
 const debug = _debug('mopt')
 const debugErrors = _debug('mopt:errors')
@@ -20,6 +20,10 @@ const DODGY_MOPT = /__DODGY_MOPT/
 const DODGY_MOPT_REPLACE = '__DODGY_MOPT_REPLACE__'
 
 const UNDEFINED_REGEX = new RegExp(`"${DODGY_MOPT_REPLACE}"`, 'g')
+
+function generate(code) {
+    return babelGenerate(code, { compact: true }) // makes it easier to match
+}
 
 function process(code) {
     debug('executing %s', code)
@@ -64,26 +68,36 @@ const COMPLEX_RULES = [
     }, {
         visitor: {
             ObjectExpression: function(path) {
-                if(path.node.properties && path.node.properties.length === 1 && path.node.properties[0].key.value === INTERNAL_ATTRS_KEY) {
+                if(path.node.properties && path.node.properties.length > 0 && path.node.properties[0].key.value === INTERNAL_ATTRS_KEY) {
                     debug('already processed object attrs')
                     return
                 }
-                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId++}__"`
+                const base = `"${INTERNAL_ATTRS_KEY}":"__DODGY_MOPT_REPLACE_ATTRS_${replacementId}__","key":"__DODGY_MOPT_REPLACE_KEY_${replacementId}__"`
                 const key = `{${base}}` // extra {} to make a full obj
                 const baseRegex = base.replace(':', ': *')
                 const completeRegex = new RegExp(`{${baseRegex}}`)
                 const partialRegex = new RegExp(baseRegex)
-                matches = matches.concat({ key, completeRegex, partialRegex, type: 'attributeIdentifiers', original: generate(path.node).code })
+                const mKeyNode = path.node.properties.find( (n) => n.type === 'ObjectProperty' && n.key.name === 'key')
+                matches = matches.concat({
+                    key
+                    , completeRegex
+                    , partialRegex
+                    , type: 'attributeIdentifiers'
+                    , original: generate(path.node).code
+                    , mKeyOriginal: mKeyNode ? generate(mKeyNode.value).code : 'undefined'
+                    , mKeyRegex: new RegExp(`"__DODGY_MOPT_REPLACE_KEY_${replacementId}__"`)
+                })
                 path.replaceWithSourceString(key)
+                replacementId++
                 debug('replaced object with %s', key)
             }
         },
         transform: function attributeIdentifiers(processed) {
             const objMatches = matches.filter( ({ type }) => type === 'attributeIdentifiers')
             if(objMatches.length !== 0) {
-                const replaced = objMatches.reduce( (str, { completeRegex, partialRegex, original }) => completeRegex.test(str)
-                    ? str.replace(completeRegex, original) // we're the while object `{"fakeKey":"fakeVal"}`
-                    : str.replace(partialRegex, original.replace(SURROUNDING_REGEXP, '')) // we're only part of the object `{"fakeKey":"fakeVal", x: y, ...}`
+                const replaced = objMatches.reduce( (str, { completeRegex, partialRegex, original, mKeyOriginal, mKeyRegex }) => completeRegex.test(str)
+                    ? str.replace(completeRegex, original).replace(mKeyRegex, mKeyOriginal) // we're the while object `{"fakeKey":"fakeVal"}`
+                    : str.replace(partialRegex, original.replace(SURROUNDING_REGEXP, '')).replace(mKeyRegex, mKeyOriginal) // we're only part of the object `{"fakeKey":"fakeVal", x: y, ...}`
                 , processed)
                 return replaced
             }

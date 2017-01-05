@@ -10,6 +10,7 @@ TODO
       hackery with something that's correct for Babel
 - [ ] Figure out a cleaner way to bail on the `tryToHandleComplex` transforms
 - [ ] Linting
+- [ ] m.fragment
 - [ ] Could consider unsafe transforms (via flags?)
       * [ ] Pick up intelligible like `m('div', vnode.attrs)` as an obj,
             or `m('div', vnode.children)`

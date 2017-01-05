@@ -458,6 +458,14 @@ describe("mithril-objectify", function() {
                 code('m(Component, {x: 1}, m("div", {y: 2}))'),
                 '({"tag":Component,"key":undefined,"attrs":{x:1},"children":[{"tag":"div","key":undefined,"attrs":{y:2},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
             );
+            assert.equal( // TODO we could remove key from attrs
+                code('m(Component, {key: 0, x: 1}, m("div", {y: 2}))'),
+                '({"tag":Component,"key":0,"attrs":{key:0,x:1},"children":[{"tag":"div","key":undefined,"attrs":{y:2},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
+            assert.equal( // TODO we could remove key from attrs
+                code('m(Component, {key: 0, x: 1}, m("div", {key: id, y: 2}))'),
+                '({"tag":Component,"key":0,"attrs":{key:0,x:1},"children":[{"tag":"div","key":id,"attrs":{key:id,y:2},"children":[],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false}],"text":undefined,"dom":undefined,"domSize":undefined,"state":{},"events":undefined,"instance":undefined,"skip":false});'
+            );
         });
     })
     it.skip('should assume Object.assign({}...) returns attrs (if told to)', function() { // NOTE: this isn't safe... (Mithril will handle { tag: "x"... } differently :-s
