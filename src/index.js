@@ -245,7 +245,7 @@ const visitor = {
                     path.replaceWithSourceString(`(${result})`)
                 } else {
                     debugErrors('Failed to process node %j because of error %s', e.stack)
-                    path.replaceWithSourceString(`(${code})`)
+                    path.replaceWithSourceString(code.startsWith('(') && code.endsWith(')') ? code : `(${code})`)
                     path.node.moptProcessed = true
                 }
             }
