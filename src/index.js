@@ -68,7 +68,7 @@ const COMPLEX_RULES = [
     }, {
         visitor: {
             ObjectExpression: function(path) {
-                if(path.node.properties && path.node.properties.length > 0 && path.node.properties[0].key.value === INTERNAL_ATTRS_KEY) {
+                if(path.node.properties && path.node.properties.length > 0 && path.node.properties[0].key && path.node.properties[0].key.value === INTERNAL_ATTRS_KEY) {
                     debug('already processed object attrs')
                     return
                 }
